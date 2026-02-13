@@ -1,7 +1,7 @@
 # ConfigSync
 
 <div align="center">
-  <img src="configSync-logo.png" alt="ConfigSync Logo" width="200">
+  <img src="logo.png" alt="ConfigSync Logo" width="200">
 </div>
 
 [![Rust CI](https://github.com/kowshik24/configsync/actions/workflows/ci.yml/badge.svg)](https://github.com/kowshik24/configsync/actions/workflows/ci.yml)
