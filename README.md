@@ -1,5 +1,9 @@
 # ConfigSync
 
+<div align="center">
+  <img src="configSync-logo.png" alt="ConfigSync Logo" width="200">
+</div>
+
 [![Rust CI](https://github.com/Start-Here/ConfigSync/actions/workflows/ci.yml/badge.svg)](https://github.com/Start-Here/ConfigSync/actions/workflows/ci.yml)
 [![License](https://img.shields.io/crates/l/configsync.svg)](LICENSE)
 
