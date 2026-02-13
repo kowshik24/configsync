@@ -2,142 +2,144 @@
 
 <div align="center">
   <img src="logo.png" alt="ConfigSync Logo" width="200">
+  <p><strong>A safe, team-oriented dotfile synchronization tool for developers.</strong></p>
+
+  [![Rust CI](https://github.com/kowshik24/configsync/actions/workflows/ci.yml/badge.svg)](https://github.com/kowshik24/configsync/actions/workflows/ci.yml)
+  [![License](https://img.shields.io/github/license/kowshik24/configsync.svg)](LICENSE)
 </div>
 
-[![Rust CI](https://github.com/kowshik24/configsync/actions/workflows/ci.yml/badge.svg)](https://github.com/kowshik24/configsync/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/kowshik24/configsync.svg)](LICENSE)
+---
 
-**ConfigSync** is a team-oriented dotfile synchronization tool designed to bridge the gap between personal preference and team standards. It treats configuration as code, with versioning, diffing, and team-wide enforcement, without requiring users to manually manage git submodules or symlinks.
+**ConfigSync** bridges the gap between personal preference and team standards. It treats your configuration as code—versioned, diffed, and synced across machines—without the headache of manual symlinks or complex git submodules.
 
-## The Problem
+## 🚀 Key Features
 
-Every developer has dotfiles (`.zshrc`, `settings.json`, `.gitconfig`). Every team has shared configs (linters, formatters, IDE settings). Currently, teams solve this with:
-*   **Git submodules**: Too complex for non-devs or quick setups.
-*   **Slack/Email**: "Hey copy this" leads to drift immediately.
-*   **Manual symlinking**: Fragile and platform-specific.
+-   **Zero-Config Git**: ConfigSync manages the git repository for you. No need to memorize git commands for your dotfiles.
+-   **Machine Roles**: Assign roles (e.g., `work`, `personal`) to files. Sync your `.vimrc` everywhere, but keep your `.ssh/config` work-specific.
+-   **Secrets Management**: Encrypt sensitive files (like `.env`, `id_rsa`) using `age` encryption. Keys stay local; data syncs safely.
+-   **Safety Nets**: Built-in `history` and `undo` commands let you revert mistakes instantly.
+-   **Doctor**: diagnose broken symlinks, missing keys, or configuration drift with a single command.
+-   **Daemon Mode**: Watch for changes and sync automatically in the background.
+-   **Cross-Platform**: Works on Linux, macOS, and Windows (using native Junctions).
 
-## The Solution
+## 📦 Installation
 
-**ConfigSync** offers a CLI that autonomously manages your configuration state.
+### Option 1: Binary Release (Recommended)
+Download the latest binary for your platform from the [Releases Page](https://github.com/kowshik24/configsync/releases).
 
-### Core Features
-
-*   **Zero Git Knowledge Required**: The tool manages the repository state for you.
-*   **Team-First Identity**: Join a team via URL; subscribe to changes rather than forking.
-*   **Cross-Platform Symlinks**: Abstracted away for Linux, macOS, and Windows.
-*   **Conflict Resolution**: (Coming Soon) Intelligent merging of local vs remote changes.
-
-## Installation
-
-### From Crates.io (Recommended)
-
-Once published, you can install directly via cargo:
-
+### Option 2: Cargo
+If you have Rust installed:
 ```bash
 cargo install configsync
 ```
 
-### From Source
-
+### Option 3: From Source
 ```bash
 git clone https://github.com/kowshik24/configsync.git
 cd configsync
+cargo install --path .
 ```
 
-
-2.  Install locally:
-    ```bash
-    cargo install --path .
-    ```
-
-Or build manually and copy the binary:
-```bash
-cargo build --release
-cp target/release/configsync ~/.local/bin/
-```
-
-## Quick Start
+## ⚡ Quick Start
 
 ### 1. Initialize
-To start tracking your dotfiles or clone an existing configuration repostiory:
+Start tracking your dotfiles. You can optionally tag this machine with a role (e.g., `work`).
 
 ```bash
-# Initialize a empty local repository
-configsync init
+configsync init --role work
+```
 
-# OR clone an existing team repository
-configsync init --url https://github.com/my-team/configs.git
+*Already have a repo?* Clone it directly:
+```bash
+configsync init --url https://github.com/my-username/dotfiles.git --role personal
 ```
 
 ### 2. Add a File
-To add a file to the sync (e.g., your `.vimrc`):
+Move a file to the repo and replace it with a symlink.
 
 ```bash
-configsync add ~/.vimrc
+configsync add ~/.zshrc
 ```
-This moves `~/.vimrc` to the local repository and creates a symlink in its place.
 
-### 3. Sync Changes
-To push your local changes upstream:
+### 3. Sync
+Push your changes to the remote repository.
 
 ```bash
 configsync push
 ```
 
-To pull the latest team standards:
+Pull changes from other machines.
 
 ```bash
 configsync pull
 ```
 
-### 4. Secrets Management 🔒
-Encrypt sensitive files (like `.env`, `id_rsa`) before syncing.
+## 📚 User Guide
+
+### Managing Files
+Add files to your shared configuration. By default, files are synced to all machines.
 
 ```bash
-# Initialize keys (run once per machine)
-configsync secrets init
+# Add a global file
+configsync add ~/.vimrc
 
-# Add a secret file
+# Add a file ONLY for 'work' machines
+configsync add ~/.npmrc --role work
+```
+
+### Secrets Management 🔒
+Never commit plain-text secrets. ConfigSync uses `age` to encrypt files before they hit the disk in the repo.
+
+**1. Initialize Keys (Run once per machine)**
+```bash
+configsync secrets init
+# Creates ~/.local/share/configsync/key.txt (Keep this safe! Backup manually!)
+```
+
+**2. Add a Secret**
+```bash
 configsync secrets add ~/.env
 ```
-The file is encrypted in the repo and automatically decrypted when you `pull`.
+The file is encrypted as `secrets/.env.age` in the repo. It is automatically decrypted and restored when you run `configsync pull` or `configsync apply`.
 
-### 5. Rollback & History ⏪
-Made a mistake? View history and undo changes.
+### History & Undo ⏪
+Made a mistake? No problem.
 
 ```bash
 # View change log
 configsync history
 
-# Undo last change
+# Undo the last change (reverts commit and restores files)
 configsync undo
 ```
 
-### 6. Doctor 🩺
-Diagnose issues like broken symlinks or missing keys.
+### Daemon Mode 🔄
+Don't want to run `push` manually? Start the watcher.
+
+```bash
+configsync watch
+```
+It monitors your tracked files and auto-commits changes.
+
+### Diagnostics 🩺
+Something feels wrong? Broken symlinks?
 
 ```bash
 configsync doctor
 ```
+The Doctor will check your config, repo status, symlinks, and keys, and suggest fixes.
 
-## Architecture
+## 🏗️ Architecture
 
-ConfigSync is built in Rust for performance and reliability.
-- **Core**: Handles git operations via `libgit2`, file system abstraction, and configuration management.
-- **CLI**: Powered by `clap` for a robust command-line experience.
-- **Storage**: Uses TOML for configuration (`team-config.toml`) and standard Git for version control.
+ConfigSync is built in Rust for speed and reliability.
+-   **Core**: Uses `libgit2` for git operations and `age` for encryption.
+-   **Storage**: Configuration is stored in `team-config.toml`.
+-   **Symlinks**: Uses native symlinks on Unix and Junctions on Windows.
 
-## Roadmap
+## 🤝 Contributing
 
-- [x] Basic Sync (Init, Add, Push, Pull)
-- [x] Daemon Mode (Auto-sync)
-- [x] Role System (Work/Personal)
-- [x] Secret Management (via `age`)
-- [x] Rollback System (History/Undo)
-- [x] Doctor (Diagnostics)
-- [x] Windows Junction Support
-- [ ] Conflict Resolution TUI
+Contributions are welcome! Please check out the issues or submit a PR.
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](LICENSE) for details.
