@@ -1,6 +1,6 @@
 [package]
 name = "configsync"
-version = "0.2.0"
+version = "0.3.1"
 edition = "2021"
 authors = ["Koshik Debanath"]
 description = "Team dotfile sync engine"
