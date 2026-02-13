@@ -59,6 +59,11 @@ pub fn handle_command(command: Commands) -> Result<()> {
             // If git revert deletes the file, then symlink is broken.
             // We should run apply to be safe.
             crate::core::engine::apply::apply()?;
+            crate::core::engine::apply::apply()?;
+            Ok(())
+        }
+        Commands::Doctor => {
+            crate::core::doctor::check()?;
             Ok(())
         }
     }

@@ -45,6 +45,8 @@ pub enum Commands {
         /// Optional commit hash to revert (defaults to HEAD)
         commit: Option<String>,
     },
+    /// Diagnose issues with the setup
+    Doctor,
 }
 
 #[derive(Subcommand, Debug)]
