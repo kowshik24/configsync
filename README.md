@@ -4,8 +4,8 @@
   <img src="configSync-logo.png" alt="ConfigSync Logo" width="200">
 </div>
 
-[![Rust CI](https://github.com/Start-Here/ConfigSync/actions/workflows/ci.yml/badge.svg)](https://github.com/Start-Here/ConfigSync/actions/workflows/ci.yml)
-[![License](https://img.shields.io/crates/l/configsync.svg)](LICENSE)
+[![Rust CI](https://github.com/kowshik24/configsync/actions/workflows/ci.yml/badge.svg)](https://github.com/kowshik24/configsync/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/kowshik24/configsync.svg)](LICENSE)
 
 **ConfigSync** is a team-oriented dotfile synchronization tool designed to bridge the gap between personal preference and team standards. It treats configuration as code, with versioning, diffing, and team-wide enforcement, without requiring users to manually manage git submodules or symlinks.
 
@@ -33,15 +33,22 @@ Every developer has dotfiles (`.zshrc`, `settings.json`, `.gitconfig`). Every te
 
 Ensure you have Rust installed (via [rustup](https://rustup.rs/)).
 
-```bash
-cargo install --path .
-```
+**Note**: `configsync` is not yet published to crates.io, so you cannot install it with `cargo install configsync` directly. You must install it from the source code.
 
-Or clone and build:
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/kowshik24/configsync.git
+    cd configsync
+    ```
 
+
+2.  Install locally:
+    ```bash
+    cargo install --path .
+    ```
+
+Or build manually and copy the binary:
 ```bash
-git clone https://github.com/yourusername/configsync.git
-cd configsync
 cargo build --release
 cp target/release/configsync ~/.local/bin/
 ```
