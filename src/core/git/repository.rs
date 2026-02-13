@@ -160,7 +160,7 @@ impl GitRepository {
         revwalk.set_sorting(git2::Sort::TIME)?;
 
         println!("Commit History (Last 10):");
-        for (_i, oid) in revwalk.take(10).enumerate() {
+        for oid in revwalk.take(10) {
             let oid = oid.context("Failed to get oid")?;
             let commit = self
                 .repo
