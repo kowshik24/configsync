@@ -1,10 +1,11 @@
 [package]
 name = "configsync"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-authors = ["Your Name"]
+authors = ["Koshik Debanath"]
 description = "Team dotfile sync engine"
-license = "MIT OR Apache-2.0"
+repository = "https://github.com/kowshik24/configsync"
+license = "MIT"
 
 [profile.release]
 strip = true        # Minimal binary size

@@ -29,13 +29,16 @@ Every developer has dotfiles (`.zshrc`, `settings.json`, `.gitconfig`). Every te
 
 ## Installation
 
-### From Source (Rust)
+### From Crates.io (Recommended)
 
-Ensure you have Rust installed (via [rustup](https://rustup.rs/)).
+Once published, you can install directly via cargo:
 
-**Note**: `configsync` is not yet published to crates.io, so you cannot install it with `cargo install configsync` directly. You must install it from the source code.
+```bash
+cargo install configsync
+```
 
-1.  Clone the repository:
+### From Source
+
     ```bash
     git clone https://github.com/kowshik24/configsync.git
     cd configsync
