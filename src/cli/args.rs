@@ -38,6 +38,13 @@ pub enum Commands {
         #[command(subcommand)]
         command: SecretCommands,
     },
+    /// Show commit history
+    History,
+    /// Undo the last change (revert commit)
+    Undo {
+        /// Optional commit hash to revert (defaults to HEAD)
+        commit: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug)]

@@ -153,4 +153,53 @@ impl GitRepository {
 
         Ok(())
     }
+
+    pub fn log(&self) -> Result<()> {
+        let mut revwalk = self.repo.revwalk().context("Failed to create revwalk")?;
+        revwalk.push_head().context("Failed to push head")?;
+        revwalk.set_sorting(git2::Sort::TIME)?;
+
+        println!("Commit History (Last 10):");
+        for (_i, oid) in revwalk.take(10).enumerate() {
+            let oid = oid.context("Failed to get oid")?;
+            let commit = self.repo.find_commit(oid).context("Failed to find commit")?;
+            
+            let short_id = &oid.to_string()[..7];
+            let message = commit.summary().unwrap_or("<no message>");
+            let author = commit.author();
+            let name = author.name().unwrap_or("Unknown");
+            
+            let time = commit.time();
+            let datetime = chrono::DateTime::from_timestamp(time.seconds(), 0)
+                .map(|d| d.format("%Y-%m-%d %H:%M:%S").to_string())
+                .unwrap_or_else(|| "Unknown time".to_string());
+
+            println!("{} {} - {} ({})", short_id, datetime, message, name);
+        }
+        Ok(())
+    }
+
+    pub fn revert(&self, commit_hash: Option<String>) -> Result<()> {
+        // 1. Resolve commit to revert
+        let commit = if let Some(hash) = commit_hash {
+             let oid = git2::Oid::from_str(&hash).context("Invalid commit hash")?;
+             self.repo.find_commit(oid).context("Commit not found")?
+        } else {
+             self.repo.head()?.peel_to_commit().context("Failed to get HEAD commit")?
+        };
+
+        println!("Reverting commit: {} - {}", commit.id(), commit.summary().unwrap_or(""));
+
+        // 2. Perform Revert (in memory/index)
+        // git2::revert modifies the index and working tree to reverse the commit
+        let mut opts = git2::RevertOptions::new();
+        self.repo.revert(&commit, Some(&mut opts)).context("Failed to revert")?;
+
+        // 3. Commit the Revert
+        let message = format!("Revert \"{}\"", commit.summary().unwrap_or(""));
+        self.commit_all(&message)?;
+
+        println!("Revert successful. New commit created.");
+        Ok(())
+    }
 }

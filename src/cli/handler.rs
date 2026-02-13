@@ -35,5 +35,31 @@ pub fn handle_command(command: Commands) -> Result<()> {
                 Ok(())
             }
         },
+        Commands::History => {
+            let config_dir = directories::ProjectDirs::from("com", "configsync", "configsync")
+                .unwrap()
+                .config_dir()
+                .to_path_buf();
+            let repo = crate::core::git::repository::GitRepository::open(&config_dir)?;
+            repo.log()?;
+            Ok(())
+        }
+        Commands::Undo { commit } => {
+            let config_dir = directories::ProjectDirs::from("com", "configsync", "configsync")
+                .unwrap()
+                .config_dir()
+                .to_path_buf();
+            let repo = crate::core::git::repository::GitRepository::open(&config_dir)?;
+            repo.revert(commit)?;
+            // After revert, we might want to auto-apply?
+            // "Revert successful. New commit created."
+            // The file is reverted in the repo. We need to create the symlink again if it was deleted?
+            // Or if content changed, the symlink points to the file in repo, so it should be reflected immediately?
+            // Symlink points to valid path. Git updates file content.
+            // If git revert deletes the file, then symlink is broken.
+            // We should run apply to be safe.
+            crate::core::engine::apply::apply()?;
+            Ok(())
+        }
     }
 }
