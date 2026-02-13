@@ -4,7 +4,7 @@ use crate::core::fs::symlink;
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub fn add<P: AsRef<Path>>(path: P) -> Result<()> {
     let path = path
