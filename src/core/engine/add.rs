@@ -1,14 +1,17 @@
 use crate::core::config::loader::ConfigLoader;
 use crate::core::config::schema::{FileConfig, FileType};
 use crate::core::fs::symlink;
-use anyhow::{Result, Context};
-use std::path::{Path, PathBuf};
-use std::fs;
+use anyhow::{Context, Result};
 use directories::ProjectDirs;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 pub fn add<P: AsRef<Path>>(path: P) -> Result<()> {
-    let path = path.as_ref().canonicalize().context("Failed to resolve path")?;
-    
+    let path = path
+        .as_ref()
+        .canonicalize()
+        .context("Failed to resolve path")?;
+
     // 1. Locate repo/config
     let proj_dirs = ProjectDirs::from("com", "configsync", "configsync")
         .context("Could not determine project directories")?;
@@ -31,7 +34,7 @@ pub fn add<P: AsRef<Path>>(path: P) -> Result<()> {
     // For MVP, let's just use the basename. If collision, error.
     let file_name = path.file_name().context("Invalid path")?;
     let repo_path = config_dir.join(file_name);
-    
+
     if repo_path.exists() {
         anyhow::bail!("File {:?} already exists in repository", file_name);
     }
@@ -51,11 +54,15 @@ pub fn add<P: AsRef<Path>>(path: P) -> Result<()> {
 
     // 6. Update config
     let source = file_name.to_string_lossy().to_string();
-    let destination = path.to_string_lossy().to_string(); // This is absolute path. 
-    // Ideally we'd make it relative to HOME if possible for portability.
-    // For MVP, absolute is okay-ish, or try to replace HOME with ~
-    
-    let file_type = if repo_path.is_dir() { FileType::Directory } else { FileType::File };
+    let destination = path.to_string_lossy().to_string(); // This is absolute path.
+                                                          // Ideally we'd make it relative to HOME if possible for portability.
+                                                          // For MVP, absolute is okay-ish, or try to replace HOME with ~
+
+    let file_type = if repo_path.is_dir() {
+        FileType::Directory
+    } else {
+        FileType::File
+    };
 
     config.files.push(FileConfig {
         source,

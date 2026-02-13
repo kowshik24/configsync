@@ -1,5 +1,5 @@
 use crate::core::git::repository::GitRepository;
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use directories::ProjectDirs;
 
 pub fn push() -> Result<()> {
@@ -17,7 +17,10 @@ pub fn push() -> Result<()> {
     // Just warn on push failure for MVP (e.g. if no remote or offline)
     match repo.push() {
         Ok(_) => println!("Successfully pushed to remote."),
-        Err(e) => println!("Warning: Failed to push to remote: {}. \nChanges are committed locally.", e),
+        Err(e) => println!(
+            "Warning: Failed to push to remote: {}. \nChanges are committed locally.",
+            e
+        ),
     }
 
     Ok(())

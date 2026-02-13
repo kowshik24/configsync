@@ -1,6 +1,6 @@
-use crate::core::git::repository::GitRepository;
 use crate::core::engine::apply::apply;
-use anyhow::{Result, Context};
+use crate::core::git::repository::GitRepository;
+use anyhow::{Context, Result};
 use directories::ProjectDirs;
 
 pub fn pull() -> Result<()> {
@@ -14,7 +14,10 @@ pub fn pull() -> Result<()> {
     println!("Pulling changes from remote...");
     match repo.pull() {
         Ok(_) => println!("Successfully pulled changes."),
-        Err(e) => println!("Warning: Failed to pull: {}. Proceeding to apply locally.", e),
+        Err(e) => println!(
+            "Warning: Failed to pull: {}. Proceeding to apply locally.",
+            e
+        ),
     }
 
     println!("Applying configurations...");

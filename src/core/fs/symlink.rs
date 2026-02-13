@@ -1,13 +1,13 @@
-use std::path::Path;
 use anyhow::Context;
 use std::fs;
+use std::path::Path;
 
 pub fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> anyhow::Result<()> {
     let original = original.as_ref();
     let link = link.as_ref();
 
     if link.exists() {
-        // For MVP, we'll just error if it exists. 
+        // For MVP, we'll just error if it exists.
         // Later we can implement backup or force overwrite.
         anyhow::bail!("Destination {:?} already exists", link);
     }
@@ -19,8 +19,10 @@ pub fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> a
 
     #[cfg(unix)]
     {
-        std::os::unix::fs::symlink(original, link)
-            .context(format!("Failed to create symlink from {:?} to {:?}", original, link))?;
+        std::os::unix::fs::symlink(original, link).context(format!(
+            "Failed to create symlink from {:?} to {:?}",
+            original, link
+        ))?;
     }
 
     #[cfg(windows)]

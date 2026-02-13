@@ -1,8 +1,8 @@
 use crate::core::config::schema::TeamConfig;
 use crate::core::git::repository::GitRepository;
-use anyhow::{Result, Context};
-use std::fs;
+use anyhow::{Context, Result};
 use directories::ProjectDirs;
+use std::fs;
 
 pub fn init(url: Option<String>) -> Result<()> {
     // ProjectDirs::from("com", "organization", "application")
@@ -16,11 +16,11 @@ pub fn init(url: Option<String>) -> Result<()> {
         // For MVP, we'll just return if strictly initialized, but maybe we want to re-init or such.
         // For now, let's just warn and continue if empty, or error if not.
         if fs::read_dir(config_dir)?.next().is_some() {
-             // It's not empty
-             // We can check if it's a git repo
-             if config_dir.join(".git").exists() {
-                 return Ok(());
-             }
+            // It's not empty
+            // We can check if it's a git repo
+            if config_dir.join(".git").exists() {
+                return Ok(());
+            }
         }
     }
 
@@ -32,7 +32,7 @@ pub fn init(url: Option<String>) -> Result<()> {
     } else {
         println!("Initializing new repository at {:?}", config_dir);
         let _repo = GitRepository::init(config_dir)?;
-        
+
         // Create default config
         let config_path = config_dir.join("team-config.toml");
         if !config_path.exists() {
@@ -45,6 +45,6 @@ pub fn init(url: Option<String>) -> Result<()> {
 
     println!("Initialization complete. Applying configurations...");
     crate::core::engine::apply::apply()?;
-    
+
     Ok(())
 }
