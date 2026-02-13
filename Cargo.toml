@@ -1,6 +1,6 @@
 [package]
 name = "configsync"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 authors = ["Koshik Debanath"]
 description = "Team dotfile sync engine"
@@ -14,7 +14,7 @@ codegen-units = 1
 
 [dependencies]
 # CLI & configuration
-clap = { version = "4.0", features = ["derive", "cargo"] }
+clap = { version = "4.0", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
 directories = "5.0"   # platform config/cache paths

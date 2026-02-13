@@ -1,5 +1,11 @@
 # Release Notes
 
+## v0.3.2 - Critical Runtime Fix 🩹
+
+### Bug Fixes
+- Fixed a critical issue where `configsync` failed to run outside a source directory due to a runtime dependency on `Cargo.toml` introduced by `clap` configuration.
+- Removed `clap`'s `cargo` feature to ensure the binary is completely standalone.
+
 ## v0.3.1 - Enterprise Upgrade & Fixes 🚀
 
 This release introduces powerful features for safety and security, plus important fixes.
