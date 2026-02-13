@@ -1,23 +1,31 @@
-# v0.1.0: The "Personal with Training Wheels" MVP
+# Release Notes
 
-This is the first stable release of **ConfigSync**, designed for personal dotfile management with an eye towards team synchronization.
+## v0.3.0 - Enterprise Upgrade 🚀
 
-## Features
+This release introduces powerful features for safety and security.
 
-- **Initialization**: Easily start tracking dotfiles or clone an existing remote repo (`configsync init`).
-- **Add Files**: securely move a config file to the repo and replace it with a symlink (`configsync add`).
-- **Syncing**: 
-  - `configsync push`: Commit and push changes to the remote.
-  - `configsync pull`: Pull updates and automatically apply symlinks.
-- **Cross-Platform**: Basic support for Linux (and macOS via Unix-like behavior).
+### New Features
+- **Secrets Management** 🔒: 
+    - Encrypt sensitive files (like `.env`, `id_rsa`) using `age` encryption.
+    - `configsync secrets init`: Generate local key pair.
+    - `configsync secrets add <file>`: Encrypt and track.
+    - Automatic decryption on `pull` / `apply`.
+- **Rollback System** ⏪:
+    - `configsync history`: View recent changes.
+    - `configsync undo`: Revert the last change safely.
+- **Doctor** 🩺:
+    - `configsync doctor`: Diagnose broken symlinks, missing keys, and config issues.
+- **CI/CD**: Automated publishing to crates.io via GitHub Actions.
 
-## Installation
+### Improvements
+- Enhanced `apply` logic to handle secrets.
+- Better error reporting in CLI.
 
-Since we are not yet on crates.io, you can download the binary attached to this release and place it in your PATH, or build from source:
+## v0.2.0 - Role System & Watcher
+- Added `watch` command (daemon mode).
+- Added Role support (`--role work/personal`).
+- Added Windows Junction support.
 
-```bash
-cargo install --git https://github.com/kowshik24/configsync.git
-```
-
-## SHA256 Checksum
-`3c422fbeef7545052aa3382c113cf9163d911ded8b33786b2d5d44275cfd150a` configsync
+## v0.1.0 - MVP
+- Initial release.
+- Basic `init`, `add`, `push`, `pull` commands.
