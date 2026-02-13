@@ -20,7 +20,7 @@ pub fn handle_command(command: Commands) -> Result<()> {
             Ok(())
         }
         Commands::Watch => {
-            println!("Watch command called");
+            crate::core::watch::start()?;
             Ok(())
         }
     }
