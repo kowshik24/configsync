@@ -23,5 +23,17 @@ pub fn handle_command(command: Commands) -> Result<()> {
             crate::core::watch::start()?;
             Ok(())
         }
+        Commands::Secrets { command } => match command {
+            crate::cli::args::SecretCommands::Init => {
+                let key = crate::core::secret::keys::generate_key()?;
+                crate::core::secret::keys::save_key(&key)?;
+                println!("Secret key generated at {:?}", crate::core::secret::keys::get_key_path()?);
+                Ok(())
+            }
+            crate::cli::args::SecretCommands::Add { path } => {
+                crate::core::engine::add::add_secret(path)?;
+                Ok(())
+            }
+        },
     }
 }

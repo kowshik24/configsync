@@ -81,3 +81,70 @@ pub fn add<P: AsRef<Path>>(path: P, role: Vec<String>) -> Result<()> {
 
     Ok(())
 }
+
+pub fn add_secret<P: AsRef<Path>>(path: P) -> Result<()> {
+    let path = path
+        .as_ref()
+        .canonicalize()
+        .context("Failed to resolve path")?;
+
+    // 1. Locate repo/config
+    let proj_dirs = ProjectDirs::from("com", "configsync", "configsync")
+        .context("Could not determine project directories")?;
+    let config_dir = proj_dirs.config_dir();
+    let config_path = config_dir.join("team-config.toml");
+
+    if !config_path.exists() {
+        anyhow::bail!("ConfigSync not initialized. Run `configsync init` first.");
+    }
+
+    // 2. Load config
+    let mut config = ConfigLoader::load(&config_path)?;
+
+    // 3. Load Keys
+    let identity = crate::core::secret::keys::load_key()
+        .context("Failed to load secret key. Have you run `configsync secrets init`?")?;
+    let public_key = crate::core::secret::keys::get_public_key(&identity);
+
+    // 4. Encrypt
+    println!("Reading {:?}", path);
+    let content = fs::read(&path).context("Failed to read secret file")?;
+    println!("Encrypting...");
+    let encrypted = crate::core::secret::cipher::encrypt(&content, &public_key)?;
+
+    // 5. Save to Repo
+    let file_name = path.file_name().context("Invalid path")?;
+    let secret_dir = config_dir.join("secrets");
+    fs::create_dir_all(&secret_dir)?;
+    
+    let encrypted_filename = format!("{}.age", file_name.to_string_lossy());
+    let repo_path = secret_dir.join(&encrypted_filename);
+
+    println!("Saving encrypted file to {:?}", repo_path);
+    fs::write(&repo_path, encrypted).context("Failed to write encrypted file")?;
+
+    // 6. Update Config
+    let source = format!("secrets/{}", encrypted_filename);
+    let destination = path.to_string_lossy().to_string();
+
+    // Check if already exists
+    if config.files.iter().any(|f| f.destination == destination) {
+        println!("File already tracked. Updating encrypted content only.");
+        // We already wrote the file, so we are good.
+        // We might want to ensure the type is set to Secret if it wasn't.
+    } else {
+        config.files.push(FileConfig {
+            source,
+            destination,
+            file_type: FileType::Secret,
+            platforms: vec!["*".to_string()],
+            critical: false,
+            protect: false,
+            roles: None, // Secrets are usually machine-specific in this MVP personal-sync model, or we can add roles later
+        });
+        ConfigLoader::save(&config, &config_path)?;
+        println!("Added secret {:?} to config.", path);
+    }
+    
+    Ok(())
+}

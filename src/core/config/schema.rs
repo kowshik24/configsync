@@ -49,6 +49,7 @@ pub struct FileConfig {
 pub enum FileType {
     File,
     Directory,
+    Secret,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]

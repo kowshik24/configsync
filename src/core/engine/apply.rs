@@ -53,12 +53,47 @@ pub fn apply() -> Result<()> {
             continue;
         }
 
-        println!("Linking {:?} <- {:?}", dest_path, source_path);
+        use crate::core::config::schema::FileType;
+        match file.file_type {
+            FileType::Secret => {
+                println!("Decrypting secret {:?} -> {:?}", source_path, dest_path);
+                // Load key (lazy load? for now just load every time or load once outside loop)
+                // Let's load once outside loop if possible, or just here.
+                let identity_result = crate::core::secret::keys::load_key();
+                
+                if let Ok(identity) = identity_result {
+                    let encrypted_content = std::fs::read(&source_path).context("Failed to read encrypted file")?;
+                    match crate::core::secret::cipher::decrypt(&encrypted_content, &identity) {
+                         Ok(decrypted) => {
+                             if let Some(parent) = dest_path.parent() {
+                                 std::fs::create_dir_all(parent)?;
+                             }
+                             std::fs::write(&dest_path, decrypted)?;
+                             #[cfg(unix)]
+                             {
+                                 // Secrets should be 600
+                                 use std::os::unix::fs::PermissionsExt;
+                                 let mut perms = std::fs::metadata(&dest_path)?.permissions();
+                                 perms.set_mode(0o600);
+                                 std::fs::set_permissions(&dest_path, perms)?;
+                             }
+                             println!("Restored secret.");
+                         },
+                         Err(e) => println!("Failed to decrypt: {}", e),
+                    }
+                } else {
+                    println!("Skipping secret: No private key found. Run `configsync secrets init` or restore key.");
+                }
+            },
+            _ => {
+                println!("Linking {:?} <- {:?}", dest_path, source_path);
 
-        // We might want to handle backup here, but for now just try create_symlink
-        match symlink::create_symlink(&source_path, &dest_path) {
-            Ok(_) => println!("OK"),
-            Err(e) => println!("Failed: {}", e),
+                // We might want to handle backup here, but for now just try create_symlink
+                match symlink::create_symlink(&source_path, &dest_path) {
+                    Ok(_) => println!("OK"),
+                    Err(e) => println!("Failed: {}", e),
+                }
+            }
         }
     }
 

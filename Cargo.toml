@@ -38,6 +38,7 @@ rusqlite_migration = { version = "1.1" }
 age = { version = "0.10", features = ["armor"] }
 anyhow = "1.0.101"
 shellexpand = "3.0"
+secrecy = "0.8"
 
 
 # Symlinks (Windows)

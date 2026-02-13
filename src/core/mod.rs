@@ -4,6 +4,7 @@ pub mod fs;
 pub mod git;
 pub mod watch;
 pub mod state;
+pub mod secret;
 // pub mod watcher;
 // pub mod db;
 // pub mod secret;

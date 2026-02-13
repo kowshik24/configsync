@@ -33,4 +33,20 @@ pub enum Commands {
     Pull,
     /// Watch for changes and sync automatically (daemon mode)
     Watch,
+    /// Manage secrets (encrypted files)
+    Secrets {
+        #[command(subcommand)]
+        command: SecretCommands,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum SecretCommands {
+    /// Initialize secrets (generate key pair)
+    Init,
+    /// Add a secret file (encrypts and adds to repo)
+    Add {
+        /// Path to the secret file
+        path: PathBuf,
+    },
 }
