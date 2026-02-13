@@ -39,10 +39,10 @@ cargo install configsync
 
 ### From Source
 
-    ```bash
-    git clone https://github.com/kowshik24/configsync.git
-    cd configsync
-    ```
+```bash
+git clone https://github.com/kowshik24/configsync.git
+cd configsync
+```
 
 
 2.  Install locally:
