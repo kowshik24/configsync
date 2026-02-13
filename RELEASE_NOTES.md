@@ -1,8 +1,8 @@
 # Release Notes
 
-## v0.3.0 - Enterprise Upgrade 🚀
+## v0.3.1 - Enterprise Upgrade & Fixes 🚀
 
-This release introduces powerful features for safety and security.
+This release introduces powerful features for safety and security, plus important fixes.
 
 ### New Features
 - **Secrets Management** 🔒: 
@@ -15,11 +15,14 @@ This release introduces powerful features for safety and security.
     - `configsync undo`: Revert the last change safely.
 - **Doctor** 🩺:
     - `configsync doctor`: Diagnose broken symlinks, missing keys, and config issues.
-- **CI/CD**: Automated publishing to crates.io via GitHub Actions.
+- **CI/CD**: Automated integration tests and publishing.
 
-### Improvements
-- Enhanced `apply` logic to handle secrets.
+### Improvements & Fixes
+- Fixed Clippy lints for cleaner codebase.
+- Improved cleanup of verification scripts.
+- Enhanced documentation and `README.md`.
 - Better error reporting in CLI.
+
 
 ## v0.2.0 - Role System & Watcher
 - Added `watch` command (daemon mode).
