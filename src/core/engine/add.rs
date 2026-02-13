@@ -116,7 +116,7 @@ pub fn add_secret<P: AsRef<Path>>(path: P) -> Result<()> {
     let file_name = path.file_name().context("Invalid path")?;
     let secret_dir = config_dir.join("secrets");
     fs::create_dir_all(&secret_dir)?;
-    
+
     let encrypted_filename = format!("{}.age", file_name.to_string_lossy());
     let repo_path = secret_dir.join(&encrypted_filename);
 
@@ -145,6 +145,6 @@ pub fn add_secret<P: AsRef<Path>>(path: P) -> Result<()> {
         ConfigLoader::save(&config, &config_path)?;
         println!("Added secret {:?} to config.", path);
     }
-    
+
     Ok(())
 }

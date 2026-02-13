@@ -23,8 +23,8 @@ pub fn start() -> Result<()> {
     let (tx, rx) = channel();
 
     // Create a debouncer with 2 seconds timeout
-    let mut debouncer = new_debouncer(Duration::from_secs(2), tx)
-        .context("Failed to create file watcher")?;
+    let mut debouncer =
+        new_debouncer(Duration::from_secs(2), tx).context("Failed to create file watcher")?;
 
     debouncer
         .watcher()
@@ -36,9 +36,9 @@ pub fn start() -> Result<()> {
         match result {
             Ok(events) => {
                 // Filter out .git changes
-                let has_relevant_changes = events.iter().any(|e| {
-                    !e.path.components().any(|c| c.as_os_str() == ".git")
-                });
+                let has_relevant_changes = events
+                    .iter()
+                    .any(|e| !e.path.components().any(|c| c.as_os_str() == ".git"));
 
                 if has_relevant_changes {
                     println!("Changes detected. Syncing...");

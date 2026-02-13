@@ -1,9 +1,9 @@
+use crate::core::config::loader::ConfigLoader;
+use crate::core::config::schema::FileType;
+use crate::core::state::LocalState;
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use std::fs;
-use crate::core::config::loader::ConfigLoader;
-use crate::core::state::LocalState;
-use crate::core::config::schema::FileType;
 
 pub fn check() -> Result<()> {
     println!("🩺 ConfigSync Doctor\n");
@@ -53,7 +53,7 @@ pub fn check() -> Result<()> {
     // 4. File Symlink Checks
     println!("\nChecking {} tracked files...", config.files.len());
     let state = LocalState::load().unwrap_or_default();
-    
+
     for file in &config.files {
         // Role check
         if let Some(ref required_roles) = file.roles {
@@ -72,9 +72,9 @@ pub fn check() -> Result<()> {
         let dest_path = std::path::PathBuf::from(expanded_dest.into_owned());
 
         if !source_path.exists() {
-             println!("❌ Source missing in repo: {:?}", source_path);
-             issues_found = true;
-             continue;
+            println!("❌ Source missing in repo: {:?}", source_path);
+            issues_found = true;
+            continue;
         }
 
         if !dest_path.exists() {
@@ -87,49 +87,58 @@ pub fn check() -> Result<()> {
         // For Secret types, it's a file copy, not a symlink.
         match file.file_type {
             FileType::Secret => {
-                 // Secrets are files, not symlinks.
-                 if !dest_path.is_file() {
-                     println!("⚠️ Destination {:?} should be a file (Secret)", dest_path);
-                     issues_found = true;
-                 } else {
-                     // Maybe check if content matches decrypted? Too expensive/risky for doctor?
-                     // Just existence is okay for now.
-                 }
-            },
+                // Secrets are files, not symlinks.
+                if !dest_path.is_file() {
+                    println!("⚠️ Destination {:?} should be a file (Secret)", dest_path);
+                    issues_found = true;
+                } else {
+                    // Maybe check if content matches decrypted? Too expensive/risky for doctor?
+                    // Just existence is okay for now.
+                }
+            }
             _ => {
                 // Should be a symlink
                 match fs::symlink_metadata(&dest_path) {
                     Ok(metadata) => {
                         if !metadata.file_type().is_symlink() {
-                            println!("❌ Destination {:?} is NOT a symlink (Expected symlink)", dest_path);
+                            println!(
+                                "❌ Destination {:?} is NOT a symlink (Expected symlink)",
+                                dest_path
+                            );
                             issues_found = true;
                         } else {
                             // Check target
                             match fs::read_link(&dest_path) {
                                 Ok(target) => {
                                     if target != source_path {
-                                         println!("⚠️ Symlink {:?} points to {:?}, expected {:?}", dest_path, target, source_path);
-                                         // This might be okay if it's relative?
-                                         // Canonicalize both?
-                                         if let (Ok(p1), Ok(p2)) = (fs::canonicalize(&target), fs::canonicalize(&source_path)) {
-                                             if p1 != p2 {
-                                                 issues_found = true;
-                                             }
-                                         } else {
-                                             issues_found = true;
-                                         }
+                                        println!(
+                                            "⚠️ Symlink {:?} points to {:?}, expected {:?}",
+                                            dest_path, target, source_path
+                                        );
+                                        // This might be okay if it's relative?
+                                        // Canonicalize both?
+                                        if let (Ok(p1), Ok(p2)) = (
+                                            fs::canonicalize(&target),
+                                            fs::canonicalize(&source_path),
+                                        ) {
+                                            if p1 != p2 {
+                                                issues_found = true;
+                                            }
+                                        } else {
+                                            issues_found = true;
+                                        }
                                     }
-                                },
+                                }
                                 Err(_) => {
                                     println!("❌ Failed to read link target for {:?}", dest_path);
                                     issues_found = true;
                                 }
                             }
                         }
-                    },
+                    }
                     Err(_) => {
                         println!("❌ Failed to read metadata for {:?}", dest_path);
-                         issues_found = true;
+                        issues_found = true;
                     }
                 }
             }
@@ -138,23 +147,29 @@ pub fn check() -> Result<()> {
 
     // 5. Secrets Key Check
     // If there are any secrets in config, we should check for key.
-    let has_secrets = config.files.iter().any(|f| matches!(f.file_type, FileType::Secret));
+    let has_secrets = config
+        .files
+        .iter()
+        .any(|f| matches!(f.file_type, FileType::Secret));
     if has_secrets {
         println!("\nChecking Secrets Key...");
         if let Ok(path) = crate::core::secret::keys::get_key_path() {
             if path.exists() {
-                 println!("✅ Key file exists: {:?}", path);
-                 #[cfg(unix)]
-                 {
-                     use std::os::unix::fs::PermissionsExt;
-                     let perms = fs::metadata(&path)?.permissions();
-                     if perms.mode() & 0o777 != 0o600 {
-                         println!("⚠️ Key file permissions unsafe: {:o} (Should be 600)", perms.mode() & 0o777);
-                         issues_found = true;
-                     } else {
-                         println!("✅ Key file permissions safe (600)");
-                     }
-                 }
+                println!("✅ Key file exists: {:?}", path);
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let perms = fs::metadata(&path)?.permissions();
+                    if perms.mode() & 0o777 != 0o600 {
+                        println!(
+                            "⚠️ Key file permissions unsafe: {:o} (Should be 600)",
+                            perms.mode() & 0o777
+                        );
+                        issues_found = true;
+                    } else {
+                        println!("✅ Key file permissions safe (600)");
+                    }
+                }
             } else {
                 println!("❌ Key file missing! Secrets cannot be decrypted.");
                 issues_found = true;

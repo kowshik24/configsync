@@ -1,2 +1,2 @@
-pub mod keys;
 pub mod cipher;
+pub mod keys;

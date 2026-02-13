@@ -22,7 +22,7 @@ pub fn save_key(key: &str) -> Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    
+
     // Set permissions to 600 (Unix only)
     #[cfg(unix)]
     {
@@ -30,7 +30,7 @@ pub fn save_key(key: &str) -> Result<()> {
     }
 
     fs::write(&path, key).context("Failed to write key file")?;
-    
+
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -48,7 +48,9 @@ pub fn load_key() -> Result<age::x25519::Identity> {
         anyhow::bail!("No key found. Run `configsync secrets init` first.");
     }
     let content = fs::read_to_string(path)?;
-    let key = content.trim().parse::<age::x25519::Identity>()
+    let key = content
+        .trim()
+        .parse::<age::x25519::Identity>()
         .map_err(|e| anyhow::anyhow!("Failed to parse key: {}", e))?;
     Ok(key)
 }

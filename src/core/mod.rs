@@ -1,11 +1,11 @@
 pub mod config;
+pub mod doctor;
 pub mod engine;
 pub mod fs;
 pub mod git;
-pub mod watch;
-pub mod state;
 pub mod secret;
-pub mod doctor;
+pub mod state;
+pub mod watch;
 // pub mod watcher;
 // pub mod db;
 // pub mod secret;

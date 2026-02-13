@@ -17,7 +17,8 @@ impl LocalState {
         }
 
         let content = fs::read_to_string(&path).context("Failed to read local state file")?;
-        let state: LocalState = toml::from_str(&content).context("Failed to parse local state file")?;
+        let state: LocalState =
+            toml::from_str(&content).context("Failed to parse local state file")?;
         Ok(state)
     }
 
@@ -44,7 +45,7 @@ impl LocalState {
             self.roles.push(role.to_string());
         }
     }
-    
+
     pub fn has_role(&self, role: &str) -> bool {
         self.roles.iter().any(|r| r == role)
     }

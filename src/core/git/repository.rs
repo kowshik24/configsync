@@ -162,13 +162,16 @@ impl GitRepository {
         println!("Commit History (Last 10):");
         for (_i, oid) in revwalk.take(10).enumerate() {
             let oid = oid.context("Failed to get oid")?;
-            let commit = self.repo.find_commit(oid).context("Failed to find commit")?;
-            
+            let commit = self
+                .repo
+                .find_commit(oid)
+                .context("Failed to find commit")?;
+
             let short_id = &oid.to_string()[..7];
             let message = commit.summary().unwrap_or("<no message>");
             let author = commit.author();
             let name = author.name().unwrap_or("Unknown");
-            
+
             let time = commit.time();
             let datetime = chrono::DateTime::from_timestamp(time.seconds(), 0)
                 .map(|d| d.format("%Y-%m-%d %H:%M:%S").to_string())
@@ -182,18 +185,27 @@ impl GitRepository {
     pub fn revert(&self, commit_hash: Option<String>) -> Result<()> {
         // 1. Resolve commit to revert
         let commit = if let Some(hash) = commit_hash {
-             let oid = git2::Oid::from_str(&hash).context("Invalid commit hash")?;
-             self.repo.find_commit(oid).context("Commit not found")?
+            let oid = git2::Oid::from_str(&hash).context("Invalid commit hash")?;
+            self.repo.find_commit(oid).context("Commit not found")?
         } else {
-             self.repo.head()?.peel_to_commit().context("Failed to get HEAD commit")?
+            self.repo
+                .head()?
+                .peel_to_commit()
+                .context("Failed to get HEAD commit")?
         };
 
-        println!("Reverting commit: {} - {}", commit.id(), commit.summary().unwrap_or(""));
+        println!(
+            "Reverting commit: {} - {}",
+            commit.id(),
+            commit.summary().unwrap_or("")
+        );
 
         // 2. Perform Revert (in memory/index)
         // git2::revert modifies the index and working tree to reverse the commit
         let mut opts = git2::RevertOptions::new();
-        self.repo.revert(&commit, Some(&mut opts)).context("Failed to revert")?;
+        self.repo
+            .revert(&commit, Some(&mut opts))
+            .context("Failed to revert")?;
 
         // 3. Commit the Revert
         let message = format!("Revert \"{}\"", commit.summary().unwrap_or(""));

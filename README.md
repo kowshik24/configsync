@@ -90,6 +90,36 @@ To pull the latest team standards:
 configsync pull
 ```
 
+### 4. Secrets Management 🔒
+Encrypt sensitive files (like `.env`, `id_rsa`) before syncing.
+
+```bash
+# Initialize keys (run once per machine)
+configsync secrets init
+
+# Add a secret file
+configsync secrets add ~/.env
+```
+The file is encrypted in the repo and automatically decrypted when you `pull`.
+
+### 5. Rollback & History ⏪
+Made a mistake? View history and undo changes.
+
+```bash
+# View change log
+configsync history
+
+# Undo last change
+configsync undo
+```
+
+### 6. Doctor 🩺
+Diagnose issues like broken symlinks or missing keys.
+
+```bash
+configsync doctor
+```
+
 ## Architecture
 
 ConfigSync is built in Rust for performance and reliability.
@@ -100,10 +130,13 @@ ConfigSync is built in Rust for performance and reliability.
 ## Roadmap
 
 - [x] Basic Sync (Init, Add, Push, Pull)
-- [ ] Daemon Mode (Auto-sync)
+- [x] Daemon Mode (Auto-sync)
+- [x] Role System (Work/Personal)
+- [x] Secret Management (via `age`)
+- [x] Rollback System (History/Undo)
+- [x] Doctor (Diagnostics)
+- [x] Windows Junction Support
 - [ ] Conflict Resolution TUI
-- [ ] Secret Management (via `age`)
-- [ ] Windows Junction Support
 
 ## License
 
