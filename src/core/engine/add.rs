@@ -6,7 +6,7 @@ use directories::ProjectDirs;
 use std::fs;
 use std::path::Path;
 
-pub fn add<P: AsRef<Path>>(path: P) -> Result<()> {
+pub fn add<P: AsRef<Path>>(path: P, role: Vec<String>) -> Result<()> {
     let path = path
         .as_ref()
         .canonicalize()
@@ -64,6 +64,8 @@ pub fn add<P: AsRef<Path>>(path: P) -> Result<()> {
         FileType::File
     };
 
+    let roles = if role.is_empty() { None } else { Some(role) };
+
     config.files.push(FileConfig {
         source,
         destination,
@@ -71,6 +73,7 @@ pub fn add<P: AsRef<Path>>(path: P) -> Result<()> {
         platforms: vec!["*".to_string()],
         critical: false,
         protect: false,
+        roles,
     });
 
     ConfigLoader::save(&config, &config_path)?;

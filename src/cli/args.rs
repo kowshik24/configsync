@@ -15,11 +15,17 @@ pub enum Commands {
         /// The URL of the git repository to clone
         #[arg(short, long)]
         url: Option<String>,
+        /// The role(s) of this machine (e.g. "work", "personal")
+        #[arg(long)]
+        role: Vec<String>,
     },
     /// Add a file or directory to be managed
     Add {
         /// The path to the file or directory to add
         path: PathBuf,
+        /// The role(s) this file belongs to
+        #[arg(long)]
+        role: Vec<String>,
     },
     /// Push changes to the remote repository
     Push,

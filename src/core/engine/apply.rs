@@ -22,8 +22,24 @@ pub fn apply() -> Result<()> {
 
     println!("Applying configurations for team: {}", config.team.name);
 
+    // 2a. Load local state for roles
+    use crate::core::state::LocalState;
+    let state = LocalState::load().unwrap_or_default();
+    println!("Current machine roles: {:?}", state.roles);
+
     // 3. Iterate files and symlink
     for file in config.files {
+        // Role check
+        if let Some(ref required_roles) = file.roles {
+            if !required_roles.is_empty() {
+                let has_role = required_roles.iter().any(|r| state.has_role(r));
+                if !has_role {
+                    println!("Skipping {:?} (required roles: {:?})", file.source, required_roles);
+                    continue;
+                }
+            }
+        }
+
         let source_path = config_dir.join(&file.source);
 
         let expanded_dest = shellexpand::tilde(&file.destination);

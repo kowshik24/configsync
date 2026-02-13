@@ -40,6 +40,8 @@ pub struct FileConfig {
     pub critical: bool,
     #[serde(default)]
     pub protect: bool,
+    #[serde(default)]
+    pub roles: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

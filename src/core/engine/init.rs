@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use std::fs;
 
-pub fn init(url: Option<String>) -> Result<()> {
+pub fn init(url: Option<String>, role: Vec<String>) -> Result<()> {
     // ProjectDirs::from("com", "organization", "application")
     let proj_dirs = ProjectDirs::from("com", "configsync", "configsync")
         .context("Could not determine project directories")?;
@@ -42,6 +42,16 @@ pub fn init(url: Option<String>) -> Result<()> {
             println!("Created default configuration at {:?}", config_path);
         }
     };
+
+    if !role.is_empty() {
+        use crate::core::state::LocalState;
+        let mut state = LocalState::load()?;
+        for r in role {
+            state.add_role(&r);
+            println!("Assigned role '{}' to this machine.", r);
+        }
+        state.save()?;
+    }
 
     println!("Initialization complete. Applying configurations...");
     crate::core::engine::apply::apply()?;

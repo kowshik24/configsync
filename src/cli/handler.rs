@@ -3,12 +3,12 @@ use anyhow::Result;
 
 pub fn handle_command(command: Commands) -> Result<()> {
     match command {
-        Commands::Init { url } => {
-            crate::core::engine::init::init(url)?;
+        Commands::Init { url, role } => {
+            crate::core::engine::init::init(url, role)?;
             Ok(())
         }
-        Commands::Add { path } => {
-            crate::core::engine::add::add(path)?;
+        Commands::Add { path, role } => {
+            crate::core::engine::add::add(path, role)?;
             Ok(())
         }
         Commands::Push => {
