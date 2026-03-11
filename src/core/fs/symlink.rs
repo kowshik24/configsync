@@ -27,8 +27,22 @@ pub fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> a
 
     #[cfg(windows)]
     {
-        // TODO: Implement Windows support using junction or symlink_file
-        anyhow::bail!("Windows symlink support not yet implemented in this MVP phase");
+        use std::os::windows::fs::{symlink_dir, symlink_file};
+
+        if original.is_dir() {
+            // Prefer a directory symlink; if unavailable due to privileges, fall back to junction.
+            if let Err(e) = symlink_dir(original, link) {
+                junction::create(original, link).context(format!(
+                    "Failed to create directory link from {:?} to {:?}: {}",
+                    original, link, e
+                ))?;
+            }
+        } else {
+            symlink_file(original, link).context(format!(
+                "Failed to create file symlink from {:?} to {:?}",
+                original, link
+            ))?;
+        }
     }
 
     Ok(())

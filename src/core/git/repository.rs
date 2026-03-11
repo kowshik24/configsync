@@ -222,12 +222,12 @@ Configure one with `git remote add origin <url>` or re-run `configsync init --ur
             self.repo
                 .checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
         } else {
-            // Normal merge
-            // For MVP, if it's not FF, we might just try to merge or error out.
-            // Let's error out or auto-merge
-            // Doing a real merge needs signature etc.
-            // Let's rely on checkout for now?
-            anyhow::bail!("Non fast-forward merge required. Manual intervention needed for now.");
+            anyhow::bail!(
+                "Non fast-forward update required for branch '{}'. \
+Please resolve manually in {:?} (fetch/merge/rebase), then run `configsync apply`.",
+                fetched_branch,
+                self.repo.path()
+            );
         }
 
         Ok(())

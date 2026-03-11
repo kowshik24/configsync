@@ -1,5 +1,5 @@
 use crate::cli::args::Commands;
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 pub fn handle_command(command: Commands) -> Result<()> {
     match command {
@@ -44,7 +44,7 @@ pub fn handle_command(command: Commands) -> Result<()> {
         },
         Commands::History => {
             let config_dir = directories::ProjectDirs::from("com", "configsync", "configsync")
-                .unwrap()
+                .context("Could not determine project directories")?
                 .config_dir()
                 .to_path_buf();
             let repo = crate::core::git::repository::GitRepository::open(&config_dir)?;
@@ -53,7 +53,7 @@ pub fn handle_command(command: Commands) -> Result<()> {
         }
         Commands::Undo { commit } => {
             let config_dir = directories::ProjectDirs::from("com", "configsync", "configsync")
-                .unwrap()
+                .context("Could not determine project directories")?
                 .config_dir()
                 .to_path_buf();
             let repo = crate::core::git::repository::GitRepository::open(&config_dir)?;

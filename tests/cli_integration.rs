@@ -126,3 +126,19 @@ fn apply_reports_already_linked_when_symlink_is_correct() {
     );
     assert!(output_text(&apply).contains("Already linked. Skipping."));
 }
+
+#[test]
+fn pull_without_origin_shows_guidance_and_succeeds() {
+    let home = make_temp_home("pull-no-origin");
+
+    let init = run(&home, &["init"]);
+    assert!(init.status.success(), "init failed: {}", output_text(&init));
+
+    let pull = run(&home, &["pull"]);
+    assert!(
+        pull.status.success(),
+        "pull should continue locally when origin is missing: {}",
+        output_text(&pull)
+    );
+    assert!(output_text(&pull).contains("No git remote named 'origin'"));
+}
