@@ -1,5 +1,26 @@
 # Release Notes
 
+## v0.3.5 - CI Reliability Gate + Real-World Test Hardening
+
+### CI/CD Improvements
+- Expanded CI to run strict formatting, clippy (`-D warnings`), Rust tests, and shell integration checks.
+- Added cross-platform build verification on Linux, macOS, and Windows.
+- Updated release workflow to require verification before publishing crate/binaries.
+- Fixed isolated HOME integration checks to respect XDG paths (`XDG_CONFIG_HOME`, `XDG_DATA_HOME`), preventing false negatives in CI.
+
+### Runtime / Robustness
+- Removed `unwrap()` usage in CLI project directory resolution paths.
+- Improved Windows link behavior with directory symlink + junction fallback.
+- Improved pull conflict guidance for non-fast-forward scenarios.
+
+### Test Coverage
+- Added and expanded CLI integration tests for real-use edge cases:
+  - uninitialized flows
+  - missing secret key behavior
+  - repository basename collision on add
+  - apply conflict handling
+  - pull behavior without `origin`
+
 ## v0.3.4 - Test Coverage + Sync UX Hardening 🔧
 
 ### New Tests
