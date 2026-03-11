@@ -142,3 +142,108 @@ fn pull_without_origin_shows_guidance_and_succeeds() {
     );
     assert!(output_text(&pull).contains("No git remote named 'origin'"));
 }
+
+#[test]
+fn add_without_init_fails_with_guidance() {
+    let home = make_temp_home("add-no-init");
+    let sample_path = home.join("sample.txt");
+    fs::write(&sample_path, "hello").expect("failed to create sample file");
+
+    let add = run(
+        &home,
+        &["add", sample_path.to_str().expect("utf-8 path expected")],
+    );
+    assert!(!add.status.success(), "add should fail before init");
+    assert!(output_text(&add).contains("ConfigSync not initialized"));
+}
+
+#[test]
+fn secrets_add_without_key_fails_with_guidance() {
+    let home = make_temp_home("secret-no-key");
+
+    let init = run(&home, &["init"]);
+    assert!(init.status.success(), "init failed: {}", output_text(&init));
+
+    let secret_path = home.join("secret.env");
+    fs::write(&secret_path, "TOKEN=abc").expect("failed to create secret file");
+    let add_secret = run(
+        &home,
+        &[
+            "secrets",
+            "add",
+            secret_path.to_str().expect("utf-8 path expected"),
+        ],
+    );
+    assert!(
+        !add_secret.status.success(),
+        "secrets add should fail without key initialization"
+    );
+    assert!(output_text(&add_secret).contains("Have you run `configsync secrets init`?"));
+}
+
+#[test]
+fn add_detects_repository_name_collision() {
+    let home = make_temp_home("add-collision");
+
+    let init = run(&home, &["init"]);
+    assert!(init.status.success(), "init failed: {}", output_text(&init));
+
+    let first_dir = home.join("one");
+    let second_dir = home.join("two");
+    fs::create_dir_all(&first_dir).expect("failed to create first dir");
+    fs::create_dir_all(&second_dir).expect("failed to create second dir");
+
+    let first_path = first_dir.join("dup.txt");
+    let second_path = second_dir.join("dup.txt");
+    fs::write(&first_path, "one").expect("failed to create first file");
+    fs::write(&second_path, "two").expect("failed to create second file");
+
+    let first_add = run(
+        &home,
+        &["add", first_path.to_str().expect("utf-8 path expected")],
+    );
+    assert!(
+        first_add.status.success(),
+        "first add failed: {}",
+        output_text(&first_add)
+    );
+
+    let second_add = run(
+        &home,
+        &["add", second_path.to_str().expect("utf-8 path expected")],
+    );
+    assert!(
+        !second_add.status.success(),
+        "second add should fail due to basename collision"
+    );
+    assert!(output_text(&second_add).contains("already exists in repository"));
+}
+
+#[test]
+fn apply_reports_conflict_for_existing_regular_file_destination() {
+    let home = make_temp_home("apply-conflict");
+
+    let init = run(&home, &["init"]);
+    assert!(init.status.success(), "init failed: {}", output_text(&init));
+
+    let sample_path = home.join("conflict.txt");
+    fs::write(&sample_path, "original").expect("failed to create sample file");
+
+    let add = run(
+        &home,
+        &["add", sample_path.to_str().expect("utf-8 path expected")],
+    );
+    assert!(add.status.success(), "add failed: {}", output_text(&add));
+
+    // Replace symlink destination with a normal file to emulate user drift.
+    fs::remove_file(&sample_path).expect("failed to remove existing symlink");
+    fs::write(&sample_path, "local drift").expect("failed to create conflict file");
+
+    let apply = run(&home, &["apply"]);
+    assert!(
+        apply.status.success(),
+        "apply failed: {}",
+        output_text(&apply)
+    );
+    assert!(output_text(&apply).contains("Destination exists and is not a symlink."));
+}
