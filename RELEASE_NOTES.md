@@ -1,5 +1,22 @@
 # Release Notes
 
+## v0.3.4 - Test Coverage + Sync UX Hardening 🔧
+
+### New Tests
+- Added Rust CLI integration tests for:
+  - fresh `init` + `history` behavior
+  - `undo` root-commit safeguard
+  - `push` local commit behavior without global git identity
+  - `apply` command and already-linked symlink UX
+
+### Sync UX Improvements
+- `apply` now reports `Already linked. Skipping.` when destination symlink is already correct.
+- `apply` now reports clearer destination inspection errors instead of generic failures.
+- Improved `push`/`pull` warning messages for missing `origin` remote configuration.
+
+### Pull/Branch Handling
+- `pull` now attempts branch fetch with dynamic branch detection and fallbacks (`main`, `master`) for better interoperability.
+
 ## v0.3.3 - First-Install Reliability & CLI UX ✅
 
 ### Reliability Fixes

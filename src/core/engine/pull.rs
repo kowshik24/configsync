@@ -14,10 +14,20 @@ pub fn pull() -> Result<()> {
     println!("Pulling changes from remote...");
     match repo.pull() {
         Ok(_) => println!("Successfully pulled changes."),
-        Err(e) => println!(
-            "Warning: Failed to pull: {}. Proceeding to apply locally.",
-            e
-        ),
+        Err(e) => {
+            let message = e.to_string();
+            if message.contains("No git remote named 'origin'") {
+                println!(
+                    "Warning: {} Proceeding to apply local repository state.",
+                    message
+                );
+            } else {
+                println!(
+                    "Warning: Failed to pull: {}. Proceeding to apply locally.",
+                    e
+                );
+            }
+        }
     }
 
     println!("Applying configurations...");

@@ -3,6 +3,7 @@ use crate::core::fs::symlink;
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use shellexpand;
+use std::fs;
 use std::path::PathBuf;
 
 pub fn apply() -> Result<()> {
@@ -92,7 +93,55 @@ pub fn apply() -> Result<()> {
             _ => {
                 println!("Linking {:?} <- {:?}", dest_path, source_path);
 
-                // We might want to handle backup here, but for now just try create_symlink
+                // If destination already points to the expected source, treat it as healthy.
+                match fs::symlink_metadata(&dest_path) {
+                    Ok(metadata) if metadata.file_type().is_symlink() => {
+                        match fs::read_link(&dest_path) {
+                            Ok(link_target) => {
+                                let resolved_target = if link_target.is_absolute() {
+                                    link_target
+                                } else if let Some(parent) = dest_path.parent() {
+                                    parent.join(link_target)
+                                } else {
+                                    link_target
+                                };
+
+                                let same_target = fs::canonicalize(&resolved_target)
+                                    .ok()
+                                    .zip(fs::canonicalize(&source_path).ok())
+                                    .map(|(a, b)| a == b)
+                                    .unwrap_or(false);
+
+                                if same_target {
+                                    println!("Already linked. Skipping.");
+                                    continue;
+                                }
+
+                                println!(
+                                    "Failed: Destination exists and points elsewhere ({:?}).",
+                                    resolved_target
+                                );
+                                continue;
+                            }
+                            Err(e) => {
+                                println!("Failed: Could not read existing symlink: {}", e);
+                                continue;
+                            }
+                        }
+                    }
+                    Ok(_) => {
+                        println!("Failed: Destination exists and is not a symlink.");
+                        continue;
+                    }
+                    Err(e) => {
+                        if e.kind() != std::io::ErrorKind::NotFound {
+                            println!("Failed: Could not inspect destination: {}", e);
+                            continue;
+                        }
+                        // Destination does not exist; create symlink below.
+                    }
+                }
+
                 match symlink::create_symlink(&source_path, &dest_path) {
                     Ok(_) => println!("OK"),
                     Err(e) => println!("Failed: {}", e),

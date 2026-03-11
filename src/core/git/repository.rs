@@ -42,6 +42,10 @@ impl GitRepository {
         "main".to_string()
     }
 
+    fn has_origin_remote(&self) -> bool {
+        self.repo.find_remote("origin").is_ok()
+    }
+
     pub fn init<P: AsRef<Path>>(path: P) -> Result<Self> {
         let repo =
             Repository::init(path.as_ref()).context("Failed to initialize git repository")?;
@@ -109,9 +113,13 @@ impl GitRepository {
     }
 
     pub fn push(&self) -> Result<()> {
-        let mut remote = self.repo.find_remote("origin").context(
-            "Failed to find remote 'origin'. If this is a local-only repo, push is not needed.",
-        )?;
+        if !self.has_origin_remote() {
+            anyhow::bail!(
+                "No git remote named 'origin' is configured. \
+Configure one with `git remote add origin <url>` or re-run `configsync init --url <repo>`."
+            );
+        }
+        let mut remote = self.repo.find_remote("origin")?;
 
         // We need to handle credentials here. For MVP, we'll try with default (ssh agent or credential helper).
         let mut callbacks = git2::RemoteCallbacks::new();
@@ -123,7 +131,10 @@ impl GitRepository {
         push_opts.remote_callbacks(callbacks);
 
         // Get current branch name
-        let head = self.repo.head().context("Failed to get HEAD")?;
+        let head = self
+            .repo
+            .head()
+            .context("Failed to get HEAD. Run `configsync init` first.")?;
         let branch_name = head.shorthand().unwrap_or("main");
         let refspec = format!("refs/heads/{}:refs/heads/{}", branch_name, branch_name);
 
@@ -135,10 +146,13 @@ impl GitRepository {
     }
 
     pub fn pull(&self) -> Result<()> {
-        let mut remote = self
-            .repo
-            .find_remote("origin")
-            .context("Failed to find remote 'origin'.")?;
+        if !self.has_origin_remote() {
+            anyhow::bail!(
+                "No git remote named 'origin' is configured. \
+Configure one with `git remote add origin <url>` or re-run `configsync init --url <repo>`."
+            );
+        }
+        let mut remote = self.repo.find_remote("origin")?;
 
         // 1. Fetch
         let mut callbacks = git2::RemoteCallbacks::new();
@@ -150,9 +164,27 @@ impl GitRepository {
         fetch_opts.remote_callbacks(callbacks);
 
         let branch_name = self.default_branch_name();
-        remote
-            .fetch(&[&branch_name], Some(&mut fetch_opts), None)
-            .context("Failed to fetch")?;
+        let mut fetched_branch = branch_name.clone();
+        let mut last_fetch_error = None;
+        for candidate in [&branch_name, "main", "master"] {
+            match remote.fetch(&[candidate], Some(&mut fetch_opts), None) {
+                Ok(_) => {
+                    fetched_branch = candidate.to_string();
+                    last_fetch_error = None;
+                    break;
+                }
+                Err(e) => {
+                    last_fetch_error = Some(e);
+                }
+            }
+        }
+
+        if let Some(e) = last_fetch_error {
+            return Err(e).context(format!(
+                "Failed to fetch from origin. Tried branches: {}, main, master",
+                branch_name
+            ));
+        }
 
         // 2. Merge (Fast-forward only for MVP simplicity)
         // Actually, we should look up local branch and merge upstream
@@ -165,7 +197,7 @@ impl GitRepository {
         if analysis.is_up_to_date() {
             println!("Already up to date.");
         } else if analysis.is_fast_forward() {
-            let refname = format!("refs/heads/{}", branch_name);
+            let refname = format!("refs/heads/{}", fetched_branch);
             let mut reference = match self.repo.find_reference(&refname) {
                 Ok(reference) => reference,
                 Err(_) => self.repo.reference(

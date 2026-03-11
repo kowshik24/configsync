@@ -17,10 +17,17 @@ pub fn push() -> Result<()> {
     // Just warn on push failure for MVP (e.g. if no remote or offline)
     match repo.push() {
         Ok(_) => println!("Successfully pushed to remote."),
-        Err(e) => println!(
-            "Warning: Failed to push to remote: {}. \nChanges are committed locally.",
-            e
-        ),
+        Err(e) => {
+            let message = e.to_string();
+            if message.contains("No git remote named 'origin'") {
+                println!("Warning: {} Changes are committed locally.", message);
+            } else {
+                println!(
+                    "Warning: Failed to push to remote: {}. \nChanges are committed locally.",
+                    e
+                );
+            }
+        }
     }
 
     Ok(())

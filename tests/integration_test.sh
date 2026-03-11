@@ -108,4 +108,4 @@ if [ ! -f /tmp/work_file ]; then error "Work file not restored"; fi
 if [ ! -f /tmp/secret_file ]; then error "Secret file not restored"; fi
 if [ "$(cat /tmp/secret_file)" != "Secret Content" ]; then error "Secret content mismatch"; fi
 
-log "🎉 ALL SYSTEMS GO! Release v0.3.3 is stable."
+log "🎉 ALL SYSTEMS GO! Release v0.3.4 is stable."
