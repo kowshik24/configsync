@@ -1,5 +1,23 @@
 # Release Notes
 
+## v0.3.3 - First-Install Reliability & CLI UX ✅
+
+### Reliability Fixes
+- Added a robust git signature fallback for commit operations when `user.name` / `user.email` are not configured globally.
+- `init` now creates an initial repository commit so `history` and `undo` do not fail on unborn branches.
+- `history` now handles empty/unborn branch state gracefully.
+- `undo` now provides a clear message when there are no commits to revert.
+- `undo` now refuses to revert the initial/root commit to prevent accidental teardown of initial setup files.
+
+### CLI Improvements
+- Added `configsync apply` as a first-class command.
+- Removed duplicate `apply` invocation in the `undo` flow.
+- Improved `pull` behavior by resolving branch names dynamically instead of hardcoding `main`.
+
+### Validation / Tooling
+- Updated integration script to set repo-local git identity for deterministic rollback tests.
+- Revalidated with `cargo fmt`, `cargo clippy -D warnings`, `cargo test --all-targets`, and full integration script execution.
+
 ## v0.3.2 - Critical Runtime Fix 🩹
 
 ### Bug Fixes

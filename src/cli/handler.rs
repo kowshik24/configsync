@@ -19,6 +19,10 @@ pub fn handle_command(command: Commands) -> Result<()> {
             crate::core::engine::pull::pull()?;
             Ok(())
         }
+        Commands::Apply => {
+            crate::core::engine::apply::apply()?;
+            Ok(())
+        }
         Commands::Watch => {
             crate::core::watch::start()?;
             Ok(())
@@ -61,7 +65,6 @@ pub fn handle_command(command: Commands) -> Result<()> {
             // Symlink points to valid path. Git updates file content.
             // If git revert deletes the file, then symlink is broken.
             // We should run apply to be safe.
-            crate::core::engine::apply::apply()?;
             crate::core::engine::apply::apply()?;
             Ok(())
         }

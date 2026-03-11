@@ -31,7 +31,7 @@ pub fn init(url: Option<String>, role: Vec<String>) -> Result<()> {
         GitRepository::clone(&u, config_dir)?;
     } else {
         println!("Initializing new repository at {:?}", config_dir);
-        let _repo = GitRepository::init(config_dir)?;
+        let repo = GitRepository::init(config_dir)?;
 
         // Create default config
         let config_path = config_dir.join("team-config.toml");
@@ -41,6 +41,8 @@ pub fn init(url: Option<String>, role: Vec<String>) -> Result<()> {
             fs::write(&config_path, toml_string).context("Failed to write default config")?;
             println!("Created default configuration at {:?}", config_path);
         }
+
+        repo.commit_all("Initialize ConfigSync repository")?;
     };
 
     if !role.is_empty() {

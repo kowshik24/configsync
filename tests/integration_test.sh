@@ -67,6 +67,8 @@ log "Step 5: Doctor Check (Clean)"
 log "Step 6: Rollback (Undo)"
 # Commit current state first if not already
 cd ~/.config/configsync
+git config user.name "ConfigSync Test"
+git config user.email "test@example.com"
 git add .
 git commit -m "State before bad change" || true
 cd -
@@ -106,4 +108,4 @@ if [ ! -f /tmp/work_file ]; then error "Work file not restored"; fi
 if [ ! -f /tmp/secret_file ]; then error "Secret file not restored"; fi
 if [ "$(cat /tmp/secret_file)" != "Secret Content" ]; then error "Secret content mismatch"; fi
 
-log "🎉 ALL SYSTEMS GO! Release v0.3.1 is stable."
+log "🎉 ALL SYSTEMS GO! Release v0.3.3 is stable."

@@ -1,6 +1,6 @@
 [package]
 name = "configsync"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 authors = ["Koshik Debanath"]
 description = "Team dotfile sync engine"
@@ -58,4 +58,3 @@ thiserror = "1.0"
 # Utilities
 sha2 = "0.10"
 glob = "0.3"
-

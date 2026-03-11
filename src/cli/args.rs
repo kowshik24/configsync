@@ -31,6 +31,8 @@ pub enum Commands {
     Push,
     /// Pull changes from the remote repository and apply them
     Pull,
+    /// Apply the current repository state to local filesystem
+    Apply,
     /// Watch for changes and sync automatically (daemon mode)
     Watch,
     /// Manage secrets (encrypted files)

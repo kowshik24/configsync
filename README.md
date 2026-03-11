@@ -74,6 +74,12 @@ Pull changes from other machines.
 configsync pull
 ```
 
+Re-apply the repository state locally (useful after manual edits or diagnostics).
+
+```bash
+configsync apply
+```
+
 ## 📚 User Guide
 
 ### Managing Files

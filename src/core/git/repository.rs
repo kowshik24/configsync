@@ -7,6 +7,41 @@ pub struct GitRepository {
 }
 
 impl GitRepository {
+    fn commit_signature(&self) -> Result<git2::Signature<'static>> {
+        if let Ok(sig) = self.repo.signature() {
+            return Ok(sig);
+        }
+
+        let name = std::env::var("GIT_AUTHOR_NAME")
+            .or_else(|_| std::env::var("GIT_COMMITTER_NAME"))
+            .unwrap_or_else(|_| "ConfigSync".to_string());
+        let email = std::env::var("GIT_AUTHOR_EMAIL")
+            .or_else(|_| std::env::var("GIT_COMMITTER_EMAIL"))
+            .unwrap_or_else(|_| "configsync@local".to_string());
+
+        git2::Signature::now(&name, &email).context(
+            "Failed to determine git signature. Set git user.name/user.email or GIT_AUTHOR_* env vars.",
+        )
+    }
+
+    fn default_branch_name(&self) -> String {
+        if let Ok(head) = self.repo.head() {
+            if let Some(name) = head.shorthand() {
+                return name.to_string();
+            }
+        }
+
+        if let Ok(origin_head) = self.repo.find_reference("refs/remotes/origin/HEAD") {
+            if let Some(symbolic) = origin_head.symbolic_target() {
+                if let Some(last) = symbolic.rsplit('/').next() {
+                    return last.to_string();
+                }
+            }
+        }
+
+        "main".to_string()
+    }
+
     pub fn init<P: AsRef<Path>>(path: P) -> Result<Self> {
         let repo =
             Repository::init(path.as_ref()).context("Failed to initialize git repository")?;
@@ -39,7 +74,7 @@ impl GitRepository {
             .find_tree(tree_id)
             .context("Failed to find tree")?;
 
-        let signature = self.repo.signature().context("Failed to get signature")?;
+        let signature = self.commit_signature()?;
 
         let parent_commit = match self.repo.head() {
             Ok(head) => {
@@ -114,8 +149,9 @@ impl GitRepository {
         let mut fetch_opts = git2::FetchOptions::new();
         fetch_opts.remote_callbacks(callbacks);
 
+        let branch_name = self.default_branch_name();
         remote
-            .fetch(&["main"], Some(&mut fetch_opts), None)
+            .fetch(&[&branch_name], Some(&mut fetch_opts), None)
             .context("Failed to fetch")?;
 
         // 2. Merge (Fast-forward only for MVP simplicity)
@@ -129,9 +165,20 @@ impl GitRepository {
         if analysis.is_up_to_date() {
             println!("Already up to date.");
         } else if analysis.is_fast_forward() {
-            let refname = "refs/heads/main"; // hardcoded for MVP
-            let mut reference = self.repo.find_reference(refname)?;
-            let name = reference.name().unwrap().to_string();
+            let refname = format!("refs/heads/{}", branch_name);
+            let mut reference = match self.repo.find_reference(&refname) {
+                Ok(reference) => reference,
+                Err(_) => self.repo.reference(
+                    &refname,
+                    fetch_commit.id(),
+                    true,
+                    "Create local branch from fetched head",
+                )?,
+            };
+            let name = reference
+                .name()
+                .map(ToString::to_string)
+                .unwrap_or(refname.clone());
             let msg = format!(
                 "Fast-Forward: Setting {} to id: {}",
                 name,
@@ -156,7 +203,13 @@ impl GitRepository {
 
     pub fn log(&self) -> Result<()> {
         let mut revwalk = self.repo.revwalk().context("Failed to create revwalk")?;
-        revwalk.push_head().context("Failed to push head")?;
+        if let Err(e) = revwalk.push_head() {
+            if e.code() == git2::ErrorCode::UnbornBranch || e.code() == git2::ErrorCode::NotFound {
+                println!("No commits yet.");
+                return Ok(());
+            }
+            return Err(e).context("Failed to push head");
+        }
         revwalk.set_sorting(git2::Sort::TIME)?;
 
         println!("Commit History (Last 10):");
@@ -189,10 +242,18 @@ impl GitRepository {
             self.repo.find_commit(oid).context("Commit not found")?
         } else {
             self.repo
-                .head()?
+                .head()
+                .context("No commits to undo yet. Create at least one commit first.")?
                 .peel_to_commit()
                 .context("Failed to get HEAD commit")?
         };
+
+        if commit.parent_count() == 0 {
+            anyhow::bail!(
+                "Refusing to undo the initial repository commit. \
+Use `configsync add` / `configsync push` to create later commits, or re-run `configsync init` if setup is broken."
+            );
+        }
 
         println!(
             "Reverting commit: {} - {}",
