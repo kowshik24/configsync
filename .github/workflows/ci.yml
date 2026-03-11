@@ -52,6 +52,8 @@ jobs:
           REAL_HOME="$HOME"
           TMP_HOME="$(mktemp -d)"
           HOME="$TMP_HOME" \
+          XDG_CONFIG_HOME="$TMP_HOME/.config" \
+          XDG_DATA_HOME="$TMP_HOME/.local/share" \
           CARGO_HOME="$REAL_HOME/.cargo" \
           RUSTUP_HOME="$REAL_HOME/.rustup" \
           bash tests/integration_test.sh

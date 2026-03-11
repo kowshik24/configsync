@@ -18,12 +18,18 @@ error() {
     exit 1
 }
 
+# Respect XDG paths when present (important for CI and cross-environment consistency).
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+CONFIGSYNC_CONFIG_DIR="$CONFIG_HOME/configsync"
+CONFIGSYNC_KEY_PATH="$DATA_HOME/configsync/key.txt"
+
 # Cleanup
-rm -rf ~/.config/configsync
+rm -rf "$CONFIGSYNC_CONFIG_DIR"
 rm -f /tmp/normal_file
 rm -f /tmp/work_file
 rm -f /tmp/secret_file
-rm -f ~/.local/share/configsync/key.txt
+rm -f "$CONFIGSYNC_KEY_PATH"
 
 # Build
 log "Building..."
@@ -32,7 +38,7 @@ cargo build
 # 1. Initialize
 log "Step 1: Initialization"
 ./target/debug/configsync init --role work
-if [ ! -d ~/.config/configsync ]; then error "Repo not created"; fi
+if [ ! -d "$CONFIGSYNC_CONFIG_DIR" ]; then error "Repo not created"; fi
 
 # 2. Add Normal File
 log "Step 2: Add Normal File"
@@ -51,12 +57,12 @@ if [ ! -L /tmp/work_file ]; then error "Work file not symlinked"; fi
 # 4. Secrets
 log "Step 4: Secrets Management"
 ./target/debug/configsync secrets init
-if [ ! -f ~/.local/share/configsync/key.txt ]; then error "Key not generated"; fi
+if [ ! -f "$CONFIGSYNC_KEY_PATH" ]; then error "Key not generated"; fi
 
 touch /tmp/secret_file
 echo "Secret Content" > /tmp/secret_file
 ./target/debug/configsync secrets add /tmp/secret_file
-if [ ! -f ~/.config/configsync/secrets/secret_file.age ]; then error "Secret not encrypted in repo"; fi
+if [ ! -f "$CONFIGSYNC_CONFIG_DIR/secrets/secret_file.age" ]; then error "Secret not encrypted in repo"; fi
 
 
 # 5. Doctor Check (Should be clean)
@@ -66,7 +72,7 @@ log "Step 5: Doctor Check (Clean)"
 # 6. Rollback / Undo
 log "Step 6: Rollback (Undo)"
 # Commit current state first if not already
-cd ~/.config/configsync
+cd "$CONFIGSYNC_CONFIG_DIR"
 git config user.name "ConfigSync Test"
 git config user.email "test@example.com"
 git add .
@@ -74,8 +80,8 @@ git commit -m "State before bad change" || true
 cd -
 
 # Make a bad change
-echo "Bad Content" > ~/.config/configsync/normal_file
-cd ~/.config/configsync
+echo "Bad Content" > "$CONFIGSYNC_CONFIG_DIR/normal_file"
+cd "$CONFIGSYNC_CONFIG_DIR"
 git add .
 git commit -m "Bad Commit"
 cd -
